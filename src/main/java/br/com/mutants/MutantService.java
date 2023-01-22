@@ -6,11 +6,13 @@ import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Outgoing;
 
 import javax.enterprise.context.ApplicationScoped;
+import java.time.Duration;
+import java.util.Random;
 
 @ApplicationScoped
 public class MutantService {
 
-    private MutantRepository mutantRepository;
+    private final MutantRepository mutantRepository;
 
     MutantService(MutantRepository mutantRepository) {
         this.mutantRepository = mutantRepository;
@@ -18,15 +20,17 @@ public class MutantService {
 
     @Outgoing("mutants-out")
     public Multi<Record<Integer, Mutant>> persistOnTopic() {
-        Mutant storm = new Mutant(1, "Storm", "Pow");
-        Mutant xavier = new Mutant(2, "Xavier", "Mental");
-
         return Multi
                 .createFrom()
-                .items(
-                        Record.of(storm.id(), storm),
-                        Record.of(xavier.id(), xavier)
-                );
+                .ticks().every(Duration.ofMillis(1000))
+                .onOverflow().drop()
+                .map(tick -> {
+                    int id = new Random().nextInt(300);
+                    String name = "Mutant" + id;
+                    int power = new Random().nextInt();
+
+                    return Record.of(id, new Mutant(id, name, power));
+                });
     }
 
     @Incoming("mutants-in")

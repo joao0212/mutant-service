@@ -1,10 +1,7 @@
 package br.com.mutants;
 
 import br.com.config.ScyllaClusterConfig;
-import com.datastax.driver.core.BoundStatement;
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
+import com.datastax.driver.core.*;
 
 import javax.enterprise.context.ApplicationScoped;
 
@@ -22,7 +19,19 @@ class MutantRepository {
         PreparedStatement ps =
                 session.prepare
                         ("INSERT INTO mutant (id, name, power) VALUES (?, ?, ?)");
-        BoundStatement bs = ps.bind(message.id(), message.name(), message.power());
+        BoundStatement bs = ps.bind(message.getId(), message.getName(), message.getPower());
         session.execute(bs);
+    }
+
+    Mutant findById(Integer id) {
+        PreparedStatement ps =
+                session.prepare(
+                        "SELECT * FROM mutant WHERE id = ?"
+                );
+        BoundStatement bs = ps.bind(id);
+        ResultSet rs = session.execute(bs);
+
+        Row row = rs.one();
+        return MutantConverter.convert(row);
     }
 }
