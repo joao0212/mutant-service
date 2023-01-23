@@ -17,8 +17,8 @@ public class MutantService {
     MutantService(MutantRepository mutantRepository) {
         this.mutantRepository = mutantRepository;
     }
-
     @Outgoing("mutants-out")
+    //Reactive message sent messages to the channel
     public Multi<Record<Integer, Mutant>> persistOnTopic() {
         return Multi
                 .createFrom()
@@ -33,8 +33,10 @@ public class MutantService {
                 });
     }
 
+    //For every message, Reactive Message calls save
     @Incoming("mutants-in")
     public void save(Mutant message) {
+        //Jackson serializer
         mutantRepository.save(message);
     }
 }
